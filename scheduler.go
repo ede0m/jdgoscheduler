@@ -1,4 +1,4 @@
-package jdscheduler
+package jdgoscheduler
 
 /*
 scheduler - a scheduler for a set of participants that runs over many seasons

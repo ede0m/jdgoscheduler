@@ -1,4 +1,4 @@
-package jdscheduler
+package jdgoscheduler
 
 import (
 	"bytes"
