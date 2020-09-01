@@ -59,7 +59,7 @@ func (sch Schedule) String() string {
 			fmt.Fprintf(writer, "participant [%s] weeks [%d]\n", k, v)
 		}
 		fmt.Fprintln(writer)
-		fmt.Fprintln(writer, "-----------------------------------------------------")
+		fmt.Fprintln(writer, "-------------------------------------------------------")
 		fmt.Fprintln(writer)
 	}
 	writer.Flush()
