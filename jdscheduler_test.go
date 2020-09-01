@@ -88,7 +88,7 @@ func TestBlockTypeAssignment(t *testing.T) {
 func TestSeasonInit(t *testing.T) {
 
 	// error season
-	_, errS := NewSeason(time.July, 1, 3, 2020, 6)
+	_, errS := newSeason(time.July, 1, 3, 2020, 6)
 	if errS == nil {
 		t.Errorf("should have raised error: less than min weeks")
 	}
@@ -96,13 +96,13 @@ func TestSeasonInit(t *testing.T) {
 
 func TestSeasonScheduling(t *testing.T) {
 
-	var nextSeason func(sM time.Month, sW, nWk, year, nP int, sch *Scheduler) (*Season, error)
-	nextSeason = func(sM time.Month, sW, nWk, year, nP int, sch *Scheduler) (*Season, error) {
-		season, err := NewSeason(sM, sW, nWk, year, nP)
+	var nextSeason func(sM time.Month, sW, nWk, year, nP int, sch *scheduler) (*season, error)
+	nextSeason = func(sM time.Month, sW, nWk, year, nP int, sch *scheduler) (*season, error) {
+		season, err := newSeason(sM, sW, nWk, year, nP)
 		if err != nil {
 			return nil, err
 		}
-		sch.AssignSeason(season)
+		sch.assignSeason(season)
 		return season, nil
 	}
 
@@ -112,25 +112,25 @@ func TestSeasonScheduling(t *testing.T) {
 	startM := time.April
 	startW := 2
 	nWk := 25
-	schSixA := NewScheduler(participantsSix)
+	schSixA := newScheduler(participantsSix)
 	season, err := nextSeason(startM, startW, nWk, 2020, 6, schSixA)
-	singleParticipantUsed := season.Blocks[1].GetWeeks()[6*2].Participant
+	singleParticipantUsed := season.blocks[1].weeks[6*2].participant
 	singleParticipantUsedIdx := indexOf(singleParticipantUsed, participantsSix)
 	season, err = nextSeason(startM, startW, nWk, 2021, 6, schSixA)
-	AssertEqual(t, participantsSix[(singleParticipantUsedIdx+1)%6], season.Blocks[1].GetWeeks()[6*2].Participant)
+	AssertEqual(t, participantsSix[(singleParticipantUsedIdx+1)%6], season.blocks[1].weeks[6*2].participant)
 
 	// shorter prime, double and remaining orders used
 	startM = time.April
 	startW = 4
 	nWk = 22
-	schSixB := NewScheduler(participantsSix)
+	schSixB := newScheduler(participantsSix)
 	season, err = nextSeason(startM, startW, nWk, 2020, 6, schSixB)
-	AssertEqual(t, season.Blocks[1].GetWeeks()[7].Participant, "D") // d was doubled
-	AssertEqual(t, season.Blocks[1].GetWeeks()[8].Participant, "E") // everyone gets weeks in prime (remaining was used)
-	AssertEqual(t, season.Blocks[1].GetWeeks()[9].Participant, "F")
+	AssertEqual(t, season.blocks[1].weeks[7].participant, "D") // d was doubled
+	AssertEqual(t, season.blocks[1].weeks[8].participant, "E") // everyone gets weeks in prime (remaining was used)
+	AssertEqual(t, season.blocks[1].weeks[9].participant, "F")
 	season, err = nextSeason(startM, startW, nWk, 2021, 6, schSixB)
-	AssertEqual(t, season.Blocks[1].GetWeeks()[0].Participant, "E") // b2b should start where it left off
-	AssertEqual(t, season.Blocks[1].GetWeeks()[4].Participant, "B") // should rotate when complete
+	AssertEqual(t, season.blocks[1].weeks[0].participant, "E") // b2b should start where it left off
+	AssertEqual(t, season.blocks[1].weeks[4].participant, "B") // should rotate when complete
 
 	// should error
 	startM = time.April
@@ -146,10 +146,10 @@ func TestSeasonScheduling(t *testing.T) {
 ///////////// BLOCK TESTS //////////////////
 func TestBlockSegmentBlockWeeks(t *testing.T) {
 
-	var checkSunday func(w Week)
-	checkSunday = func(w Week) {
-		if w.StartDate.Weekday() != 0 {
-			t.Errorf("found non Sunday start days: %s", w.StartDate)
+	var checkSunday func(w week)
+	checkSunday = func(w week) {
+		if w.startDate.Weekday() != 0 {
+			t.Errorf("found non Sunday start days: %s", w.startDate)
 		}
 	}
 
@@ -158,9 +158,9 @@ func TestBlockSegmentBlockWeeks(t *testing.T) {
 		t.Errorf("could not parse sample time")
 	}
 
-	bA := NewBlock(sunday, sunday.AddDate(0, 0, 14), None) // 2 week
-	bB := NewBlock(sunday, sunday.AddDate(0, 0, 13), None) // 1.85 weeks -> should have 1 weeks
-	bC := NewBlock(sunday, sunday.AddDate(0, 0, 29), None) // 4.14 weeks -> should have 4 weeks
+	bA := newBlock(sunday, sunday.AddDate(0, 0, 14), None) // 2 week
+	bB := newBlock(sunday, sunday.AddDate(0, 0, 13), None) // 1.85 weeks -> should have 1 weeks
+	bC := newBlock(sunday, sunday.AddDate(0, 0, 29), None) // 4.14 weeks -> should have 4 weeks
 
 	// test the fallback
 	if len(bA.weeks) != 2 || len(bB.weeks) != 1 || len(bC.weeks) != 4 {
@@ -170,13 +170,13 @@ func TestBlockSegmentBlockWeeks(t *testing.T) {
 
 	// start days should always be sundays
 	for _, w := range bA.weeks {
-		if w.StartDate.Weekday() != 0 {
-			t.Errorf("found non Sunday start days: %s", w.StartDate)
+		if w.startDate.Weekday() != 0 {
+			t.Errorf("found non Sunday start days: %s", w.startDate)
 		}
 	}
 	for _, w := range bB.weeks {
-		if w.StartDate.Weekday() != 0 {
-			t.Errorf("found non Sunday start days: %s", w.StartDate)
+		if w.startDate.Weekday() != 0 {
+			t.Errorf("found non Sunday start days: %s", w.startDate)
 		}
 	}
 	for _, w := range bC.weeks {

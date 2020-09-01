@@ -5,10 +5,10 @@ import "time"
 /*
 Block is a set of weeks within a season defined by some type
 */
-type Block struct {
+type block struct {
 	open, close time.Time
 	blockType   BlockType
-	weeks       []Week
+	weeks       []week
 }
 
 /*
@@ -43,28 +43,28 @@ func (b BlockType) String() string {
 /*
 NewBlock creates a new Block between two dates
 */
-func NewBlock(blkStartDt, blkEndDt time.Time, bt BlockType) Block {
-	return Block{blkStartDt, blkEndDt, bt, segmentBlockWeeks(blkStartDt, blkEndDt)}
+func newBlock(blkStartDt, blkEndDt time.Time, bt BlockType) block {
+	return block{blkStartDt, blkEndDt, bt, segmentBlockWeeks(blkStartDt, blkEndDt)}
 }
 
 /*
 GetOpenClose gets the open and close weeks for a block
 */
-func (b Block) GetOpenClose() (time.Time, time.Time) {
+func (b block) GetOpenClose() (time.Time, time.Time) {
 	return b.open, b.close
 }
 
 /*
 GetBlockType gets the block type of a block
 */
-func (b Block) GetBlockType() BlockType {
+func (b block) GetBlockType() BlockType {
 	return b.blockType
 }
 
 /*
 GetWeeks gets the weeks of a block
 */
-func (b Block) GetWeeks() []Week {
+func (b block) GetWeeks() []week {
 	return b.weeks
 }
 
@@ -72,12 +72,12 @@ func (b Block) GetWeeks() []Week {
 	Creates Weeks within Block. Block can only have a whole number of weeks.
 	It will fall back (floor) the number of weeks is float
 */
-func segmentBlockWeeks(blkStartDt, blkEndDt time.Time) []Week {
-	var weeks []Week
+func segmentBlockWeeks(blkStartDt, blkEndDt time.Time) []week {
+	var weeks []week
 	for d := blkStartDt; d.Before(blkEndDt) || d.Equal(blkEndDt); d = d.AddDate(0, 0, 7) {
 		// if we surpass end date, we fall back to whole number of weeks in block
 		if !d.AddDate(0, 0, 7).After(blkEndDt) {
-			weeks = append(weeks, Week{d, "", 0})
+			weeks = append(weeks, week{d, "", 0})
 		}
 	}
 	return weeks

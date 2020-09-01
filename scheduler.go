@@ -1,11 +1,11 @@
 package jdscheduler
 
 /*
-Scheduler - a scheduler for a set of participants that runs over many seasons
+scheduler - a scheduler for a set of participants that runs over many seasons
 */
-type Scheduler struct {
-	NParticipants int
-	FairMap       map[string]int      // keep track of number of weeks for each participant
+type scheduler struct {
+	nParticipants int
+	fairMap       map[string]int      // keep track of number of weeks for each participant
 	pickOrder     map[BlockType]order // the order that participants pick a season block. holds across seasons
 	pickIndex     map[BlockType]pick  // the index of the current picker in each block's pick order
 }
@@ -23,7 +23,7 @@ type order struct {
 /*
 NewScheduler - creats a new scheduler with a participants pick order for each blockType
 */
-func NewScheduler(participants []string) *Scheduler {
+func newScheduler(participants []string) *scheduler {
 
 	fm := make(map[string]int)
 	for _, p := range participants {
@@ -52,15 +52,15 @@ func NewScheduler(participants []string) *Scheduler {
 		Closing: {0, 0},
 	}
 
-	return &Scheduler{len(participants), fm, po, pi}
+	return &scheduler{len(participants), fm, po, pi}
 }
 
 /*
 AssignSeason assign season Block Weeks with a scheduler's state order of participants.
 Each season block has its own pick order.
 */
-func (sch *Scheduler) AssignSeason(s *Season) {
-	for _, b := range s.Blocks {
+func (sch *scheduler) assignSeason(s *season) {
+	for _, b := range s.blocks {
 		sch.assignBlockWeeks(&b)
 	}
 }
@@ -69,59 +69,59 @@ func (sch *Scheduler) AssignSeason(s *Season) {
 Assigns a block's weeks with a scheduler's state order.
 ...
 */
-func (sch *Scheduler) assignBlockWeeks(blk *Block) {
+func (sch *scheduler) assignBlockWeeks(blk *block) {
 
 	blkType := blk.GetBlockType()
 	weeks := blk.GetWeeks()
 	pickIndex := sch.pickIndex[blkType]
 	pickOrder := sch.pickOrder[blkType]
 
-	nWpP := float32(len(weeks)) / float32(sch.NParticipants)
+	nWpP := float32(len(weeks)) / float32(sch.nParticipants)
 	// everyone can fit and more.
 	if nWpP > 1 {
 
 		// a participant gets 1 double week a block at most
-		nDoubleWeeks := sch.NParticipants
+		nDoubleWeeks := sch.nParticipants
 		if nWpP < 2 {
-			nDoubleWeeks = len(weeks) % sch.NParticipants
+			nDoubleWeeks = len(weeks) % sch.nParticipants
 		}
 
-		remaining := make([]string, sch.NParticipants)
+		remaining := make([]string, sch.nParticipants)
 		copy(remaining, rotatePickOrder(pickOrder.double, pickIndex.double))
 
 		// assign all double weeks
 		currWeek := 0
 		for i := 0; i < nDoubleWeeks; i++ {
 			participant := pickOrder.double[pickIndex.double]
-			weeks[currWeek].AssignParticipant(participant)
-			weeks[currWeek+1].AssignParticipant(participant)
-			sch.FairMap[participant] += 2
+			weeks[currWeek].participant = participant
+			weeks[currWeek+1].participant = participant
+			sch.fairMap[participant] += 2
 			currWeek = (i + 1) * 2
 			remaining = remove(remaining, participant)
 			pickIndex.double++
-			if pickIndex.double == sch.NParticipants {
+			if pickIndex.double == sch.nParticipants {
 				pickOrder.double = rotatePickOrder(pickOrder.double, 1)
 				pickIndex.double = 0
 			}
 		}
 
 		// some participants still need weeks in this block, use remaining
-		if nDoubleWeeks < sch.NParticipants {
+		if nDoubleWeeks < sch.nParticipants {
 			for currWeek < len(weeks) && len(remaining) > 0 {
 				participant := pop(remaining)
-				weeks[currWeek].AssignParticipant(participant)
-				sch.FairMap[participant]++
+				weeks[currWeek].participant = participant
+				sch.fairMap[participant]++
 				currWeek++
 			}
 		} else {
 			// just use single pick index
 			for currWeek < len(weeks) {
 				participant := pickOrder.single[pickIndex.single]
-				weeks[currWeek].AssignParticipant(participant)
-				sch.FairMap[participant]++
+				weeks[currWeek].participant = participant
+				sch.fairMap[participant]++
 				pickIndex.single++
 				currWeek++
-				if pickIndex.single == sch.NParticipants {
+				if pickIndex.single == sch.nParticipants {
 					pickOrder.single = rotatePickOrder(pickOrder.single, 1)
 					pickIndex.single = 0
 				}
@@ -132,11 +132,11 @@ func (sch *Scheduler) assignBlockWeeks(blk *Block) {
 		// participant gets less than or exactly 1 week. rotate across years and only assign single weeks
 		for i := range weeks {
 			participant := pickOrder.single[pickIndex.single]
-			weeks[i].AssignParticipant(participant)
-			sch.FairMap[participant]++
+			weeks[i].participant = participant
+			sch.fairMap[participant]++
 			pickIndex.single++
 			// rotate and reset index when we have made a full rotation
-			if pickIndex.single == sch.NParticipants {
+			if pickIndex.single == sch.nParticipants {
 				pickOrder.single = rotatePickOrder(pickOrder.single, 1)
 				pickIndex.single = 0
 			}
