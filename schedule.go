@@ -58,6 +58,7 @@ func (sch Schedule) String() string {
 		for k, v := range sch.scheduler.fairMap {
 			fmt.Fprintf(writer, "participant [%s] weeks [%d]\n", k, v)
 		}
+		fmt.Fprintln(writer)
 	}
 	writer.Flush()
 	return b.String()
