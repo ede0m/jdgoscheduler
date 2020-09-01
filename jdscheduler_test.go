@@ -1,4 +1,4 @@
-package jdgoscheduler
+package jdscheduler
 
 import (
 	"reflect"
