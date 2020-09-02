@@ -13,11 +13,8 @@ const layoutISO = "2006-01-02"
 Schedule creates a new schedule full of seasons
 */
 type Schedule struct {
-	StartYear      int
 	Years          int
 	WeeksPerSeason int
-	StartMonth     time.Month
-	StartWeek      int
 	Participants   []string
 	Seasons        []*season
 	scheduler      scheduler
@@ -26,12 +23,13 @@ type Schedule struct {
 /*
 NewSchedule - creats a new schedule
 */
-func NewSchedule(startYear, nYears, weeksPerSeason, startWeek int, startMonth time.Month, participants []string) *Schedule {
+func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants []string) *Schedule {
 
 	Seasons := make([]*season, nYears)
 	schr := newScheduler(participants)
+	startYear := startDate.Year()
 	for y := startYear; y < startYear+nYears; y++ {
-		season, err := newSeason(startMonth, startWeek, weeksPerSeason, y, len(participants))
+		season, err := newSeason(startDate, weeksPerSeason, len(participants))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -39,7 +37,7 @@ func NewSchedule(startYear, nYears, weeksPerSeason, startWeek int, startMonth ti
 		Seasons[y-startYear] = season
 	}
 
-	return &Schedule{startYear, nYears, weeksPerSeason, startMonth, startWeek, participants, Seasons, *schr}
+	return &Schedule{nYears, weeksPerSeason, participants, Seasons, *schr}
 }
 
 func (sch Schedule) String() string {

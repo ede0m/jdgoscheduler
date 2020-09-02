@@ -21,13 +21,13 @@ NewSeason creates a new season from
 - a close month, week
 - number of participants
 */
-func newSeason(openM time.Month, openW, nWeeks, year, nParticipants int) (s *season, err error) {
-	open, close, err := setOpenCloseWeeks(openM, openW, nWeeks, year, nParticipants)
+func newSeason(t time.Time, nWeeks, nParticipants int) (s *season, err error) {
+	open, close, err := setOpenCloseWeeks(t, nWeeks, nParticipants)
 	if err != nil {
 		return nil, err
 	}
 	weeks := initSeason(open, close, nParticipants)
-	return &season{year, open, close, weeks}, nil
+	return &season{close.Year(), open, close, weeks}, nil
 }
 
 func initSeason(open, close time.Time, nParticipants int) []block {
@@ -51,13 +51,10 @@ func initSeason(open, close time.Time, nParticipants int) []block {
 	Each participant must get at least 1 week in the season.
 	Weeks start on Sundays.
 */
-func setOpenCloseWeeks(openM time.Month, openW, nWeeks, year, nP int) (o time.Time, c time.Time, err error) {
+func setOpenCloseWeeks(t time.Time, nWeeks, nP int) (o time.Time, c time.Time, err error) {
 
-	startWeek, errE := nthSundayOfMonth(openM, openW, year)
+	startWeek := closestSunday(t)
 	endWeek := startWeek.AddDate(0, 0, (7 * (nWeeks - 1)))
-	if errE != nil {
-		return o, c, errors.New("nth sunday error")
-	}
 	if nWeeks < nP {
 		return o, c, errors.New("each participant must get at least 1 week in the season")
 	}
@@ -103,4 +100,16 @@ func nthSundayOfMonth(month time.Month, wk, year int) (t time.Time, err error) {
 		return t, errors.New("no more than 5 weeks in a month")
 	}
 	return time.Date(year, month, sundayDate, 0, 0, 0, 0, time.UTC), nil
+}
+
+/* returns the time of the closest sunday to the time specified. Wednesdays roll back */
+func closestSunday(t time.Time) time.Time {
+	weekday := t.Weekday()
+	var delta int
+	if weekday > 3 {
+		delta = 7 - int(weekday)
+		return t.AddDate(0, 0, delta)
+	}
+	delta = int(weekday) % 7
+	return t.AddDate(0, 0, -1*delta)
 }

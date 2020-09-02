@@ -18,51 +18,28 @@ func AssertEqual(t *testing.T, a interface{}, b interface{}) {
 
 ///////////// SEASON TESTS //////////////
 
-func TestNthSundayOfMonth(t *testing.T) {
-
-	firstSunday, err := time.Parse(timeLayout, "2019-Sep-01")
-	secondSunday, err := time.Parse(timeLayout, "2020-Aug-09")
-	thirdSunday, err := time.Parse(timeLayout, "2020-Aug-16")
-	fourthSunday, err := time.Parse(timeLayout, "2020-May-24")
-	fifthSunday, err := time.Parse(timeLayout, "2020-May-31")
-
-	date, err := nthSundayOfMonth(time.Month(9), 1, 2019)
-	AssertEqual(t, firstSunday, date)
-
-	date, err = nthSundayOfMonth(time.Month(8), 2, 2020)
-	AssertEqual(t, secondSunday, date)
-
-	date, err = nthSundayOfMonth(time.Month(8), 3, 2020)
-	AssertEqual(t, thirdSunday, date)
-
-	date, err = nthSundayOfMonth(time.Month(5), 4, 2020)
-	AssertEqual(t, fourthSunday, date)
-
-	date, err = nthSundayOfMonth(time.Month(5), 5, 2020)
-	AssertEqual(t, fifthSunday, date)
-
-	_, err = nthSundayOfMonth(time.Month(9), 6, 2019)
-	if err == nil {
-		t.Errorf("should have raised error")
-	}
-
-}
-
 func TestSetOpenCloseWeeks(t *testing.T) {
 
-	// should be sunday
 	openPass, _ := time.Parse(timeLayout, "2020-Apr-19")
 	closePass, _ := time.Parse(timeLayout, "2020-Oct-18")
 
-	open, close, err := setOpenCloseWeeks(4, 3, 27, 2020, 7)
+	// test exact sunday
+	testDate, err := time.Parse(timeLayout, "2020-Apr-19")
+	open, close, err := setOpenCloseWeeks(testDate, 27, 7)
+	AssertEqual(t, open, openPass)
+	AssertEqual(t, close, closePass)
+	// test advance to sunday
+	testDate, err = time.Parse(timeLayout, "2020-Apr-17")
+	open, close, err = setOpenCloseWeeks(testDate, 27, 7)
+	AssertEqual(t, open, openPass)
+	AssertEqual(t, close, closePass)
+	// test fallback to sunday
+	testDate, err = time.Parse(timeLayout, "2020-Apr-21")
+	open, close, err = setOpenCloseWeeks(testDate, 27, 7)
 	AssertEqual(t, open, openPass)
 	AssertEqual(t, close, closePass)
 
-	open, close, err = setOpenCloseWeeks(4, 10, 6, 2020, 7)
-	if err == nil {
-		t.Errorf("should have raised nth sunday error")
-	}
-	open, close, err = setOpenCloseWeeks(4, 5, 7, 2020, 10)
+	open, close, err = setOpenCloseWeeks(testDate, 7, 10)
 	if err == nil {
 		t.Errorf("should have raised too short error")
 	}
@@ -88,7 +65,8 @@ func TestBlockTypeAssignment(t *testing.T) {
 func TestSeasonInit(t *testing.T) {
 
 	// error season
-	_, errS := newSeason(time.July, 1, 3, 2020, 6)
+	testDate, _ := time.Parse(timeLayout, "2020-Jul-1")
+	_, errS := newSeason(testDate, 3, 6)
 	if errS == nil {
 		t.Errorf("should have raised error: less than min weeks")
 	}
@@ -96,9 +74,9 @@ func TestSeasonInit(t *testing.T) {
 
 func TestSeasonScheduling(t *testing.T) {
 
-	var nextSeason func(sM time.Month, sW, nWk, year, nP int, sch *scheduler) (*season, error)
-	nextSeason = func(sM time.Month, sW, nWk, year, nP int, sch *scheduler) (*season, error) {
-		season, err := newSeason(sM, sW, nWk, year, nP)
+	var nextSeason func(t time.Time, nWk, nP int, sch *scheduler) (*season, error)
+	nextSeason = func(t time.Time, nWk, nP int, sch *scheduler) (*season, error) {
+		season, err := newSeason(t, nWk, nP)
 		if err != nil {
 			return nil, err
 		}
@@ -109,34 +87,32 @@ func TestSeasonScheduling(t *testing.T) {
 	// 6 ppl
 	participantsSix := []string{"A", "B", "C", "D", "E", "F"}
 	// long prime, double and single orders used in prime
-	startM := time.April
-	startW := 2
+	testDate, err := time.Parse(timeLayout, "2020-Apr-12")
 	nWk := 25
 	schSixA := newScheduler(participantsSix)
-	season, err := nextSeason(startM, startW, nWk, 2020, 6, schSixA)
+	season, err := nextSeason(testDate, nWk, 6, schSixA)
 	singleParticipantUsed := season.blocks[1].weeks[6*2].participant
 	singleParticipantUsedIdx := indexOf(singleParticipantUsed, participantsSix)
-	season, err = nextSeason(startM, startW, nWk, 2021, 6, schSixA)
+	testDate, err = time.Parse(timeLayout, "2021-Apr-11")
+	season, err = nextSeason(testDate, nWk, 6, schSixA)
 	AssertEqual(t, participantsSix[(singleParticipantUsedIdx+1)%6], season.blocks[1].weeks[6*2].participant)
 
 	// shorter prime, double and remaining orders used
-	startM = time.April
-	startW = 4
+	testDate, err = time.Parse(timeLayout, "2020-Apr-26")
 	nWk = 22
 	schSixB := newScheduler(participantsSix)
-	season, err = nextSeason(startM, startW, nWk, 2020, 6, schSixB)
+	season, err = nextSeason(testDate, nWk, 6, schSixB)
 	AssertEqual(t, season.blocks[1].weeks[7].participant, "D") // d was doubled
 	AssertEqual(t, season.blocks[1].weeks[8].participant, "E") // everyone gets weeks in prime (remaining was used)
 	AssertEqual(t, season.blocks[1].weeks[9].participant, "F")
-	season, err = nextSeason(startM, startW, nWk, 2021, 6, schSixB)
+	testDate, err = time.Parse(timeLayout, "2021-Apr-25")
+	season, err = nextSeason(testDate, nWk, 6, schSixB)
 	AssertEqual(t, season.blocks[1].weeks[0].participant, "E") // b2b should start where it left off
 	AssertEqual(t, season.blocks[1].weeks[4].participant, "B") // should rotate when complete
 
 	// should error
-	startM = time.April
-	startW = 4
 	nWk = 4
-	season, err = nextSeason(startM, startW, nWk, 2020, 6, schSixB)
+	season, err = nextSeason(testDate, nWk, 6, schSixB)
 	if err == nil {
 		t.Errorf("should have raised error: min season error")
 	}
