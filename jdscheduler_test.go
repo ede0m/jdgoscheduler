@@ -74,8 +74,8 @@ func TestSeasonInit(t *testing.T) {
 
 func TestSeasonScheduling(t *testing.T) {
 
-	var nextSeason func(t time.Time, nWk, nP int, sch *scheduler) (*season, error)
-	nextSeason = func(t time.Time, nWk, nP int, sch *scheduler) (*season, error) {
+	var nextSeason func(t time.Time, nWk, nP int, sch *scheduler) (*Season, error)
+	nextSeason = func(t time.Time, nWk, nP int, sch *scheduler) (*Season, error) {
 		season, err := newSeason(t, nWk, nP)
 		if err != nil {
 			return nil, err
@@ -91,24 +91,24 @@ func TestSeasonScheduling(t *testing.T) {
 	nWk := 25
 	schSixA := newScheduler(participantsSix)
 	season, err := nextSeason(testDate, nWk, 6, schSixA)
-	singleParticipantUsed := season.blocks[1].weeks[6*2].participant
+	singleParticipantUsed := season.Blocks[1].Weeks[6*2].Participant
 	singleParticipantUsedIdx := indexOf(singleParticipantUsed, participantsSix)
 	testDate, err = time.Parse(timeLayout, "2021-Apr-11")
 	season, err = nextSeason(testDate, nWk, 6, schSixA)
-	AssertEqual(t, participantsSix[(singleParticipantUsedIdx+1)%6], season.blocks[1].weeks[6*2].participant)
+	AssertEqual(t, participantsSix[(singleParticipantUsedIdx+1)%6], season.Blocks[1].Weeks[6*2].Participant)
 
 	// shorter prime, double and remaining orders used
 	testDate, err = time.Parse(timeLayout, "2020-Apr-26")
 	nWk = 22
 	schSixB := newScheduler(participantsSix)
 	season, err = nextSeason(testDate, nWk, 6, schSixB)
-	AssertEqual(t, season.blocks[1].weeks[7].participant, "D") // d was doubled
-	AssertEqual(t, season.blocks[1].weeks[8].participant, "E") // everyone gets weeks in prime (remaining was used)
-	AssertEqual(t, season.blocks[1].weeks[9].participant, "F")
+	AssertEqual(t, season.Blocks[1].Weeks[7].Participant, "D") // d was doubled
+	AssertEqual(t, season.Blocks[1].Weeks[8].Participant, "E") // everyone gets weeks in prime (remaining was used)
+	AssertEqual(t, season.Blocks[1].Weeks[9].Participant, "F")
 	testDate, err = time.Parse(timeLayout, "2021-Apr-25")
 	season, err = nextSeason(testDate, nWk, 6, schSixB)
-	AssertEqual(t, season.blocks[1].weeks[0].participant, "E") // b2b should start where it left off
-	AssertEqual(t, season.blocks[1].weeks[4].participant, "B") // should rotate when complete
+	AssertEqual(t, season.Blocks[1].Weeks[0].Participant, "E") // b2b should start where it left off
+	AssertEqual(t, season.Blocks[1].Weeks[4].Participant, "B") // should rotate when complete
 
 	// should error
 	nWk = 4
@@ -122,10 +122,10 @@ func TestSeasonScheduling(t *testing.T) {
 ///////////// BLOCK TESTS //////////////////
 func TestBlockSegmentBlockWeeks(t *testing.T) {
 
-	var checkSunday func(w week)
-	checkSunday = func(w week) {
-		if w.startDate.Weekday() != 0 {
-			t.Errorf("found non Sunday start days: %s", w.startDate)
+	var checkSunday func(w Week)
+	checkSunday = func(w Week) {
+		if w.StartDate.Weekday() != 0 {
+			t.Errorf("found non Sunday start days: %s", w.StartDate)
 		}
 	}
 
@@ -139,23 +139,23 @@ func TestBlockSegmentBlockWeeks(t *testing.T) {
 	bC := newBlock(sunday, sunday.AddDate(0, 0, 29), None) // 4.14 weeks -> should have 4 weeks
 
 	// test the fallback
-	if len(bA.weeks) != 2 || len(bB.weeks) != 1 || len(bC.weeks) != 4 {
+	if len(bA.Weeks) != 2 || len(bB.Weeks) != 1 || len(bC.Weeks) != 4 {
 		t.Errorf("\nincorrect week rounding\na:%d should be 2\nb:%d should be 1\nc:%d should be 4",
-			len(bA.weeks), len(bB.weeks), len(bC.weeks))
+			len(bA.Weeks), len(bB.Weeks), len(bC.Weeks))
 	}
 
 	// start days should always be sundays
-	for _, w := range bA.weeks {
-		if w.startDate.Weekday() != 0 {
-			t.Errorf("found non Sunday start days: %s", w.startDate)
+	for _, w := range bA.Weeks {
+		if w.StartDate.Weekday() != 0 {
+			t.Errorf("found non Sunday start days: %s", w.StartDate)
 		}
 	}
-	for _, w := range bB.weeks {
-		if w.startDate.Weekday() != 0 {
-			t.Errorf("found non Sunday start days: %s", w.startDate)
+	for _, w := range bB.Weeks {
+		if w.StartDate.Weekday() != 0 {
+			t.Errorf("found non Sunday start days: %s", w.StartDate)
 		}
 	}
-	for _, w := range bC.weeks {
+	for _, w := range bC.Weeks {
 		checkSunday(w)
 	}
 }

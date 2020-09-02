@@ -8,11 +8,11 @@ import (
 /*
 Season for year is composed of blocks of weeks from open week to close week
 */
-type season struct {
+type Season struct {
 	year      int
-	openWeek  time.Time
-	closeWeek time.Time
-	blocks    []block
+	OpenWeek  time.Time
+	CloseWeek time.Time
+	Blocks    []Block
 }
 
 /*
@@ -21,17 +21,17 @@ NewSeason creates a new season from
 - a close month, week
 - number of participants
 */
-func newSeason(t time.Time, nWeeks, nParticipants int) (s *season, err error) {
+func newSeason(t time.Time, nWeeks, nParticipants int) (s *Season, err error) {
 	open, close, err := setOpenCloseWeeks(t, nWeeks, nParticipants)
 	if err != nil {
 		return nil, err
 	}
 	weeks := initSeason(open, close, nParticipants)
-	return &season{close.Year(), open, close, weeks}, nil
+	return &Season{close.Year(), open, close, weeks}, nil
 }
 
-func initSeason(open, close time.Time, nParticipants int) []block {
-	var blocks []block
+func initSeason(open, close time.Time, nParticipants int) []Block {
+	var blocks []Block
 	endItr := close.AddDate(0, 0, 7) // must surpass end date to include last block week
 	currBt := Opening
 	blkStart := open

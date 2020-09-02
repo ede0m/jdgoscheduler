@@ -16,7 +16,7 @@ type Schedule struct {
 	Years          int
 	WeeksPerSeason int
 	Participants   []string
-	Seasons        []*season
+	Seasons        []*Season
 	scheduler      scheduler
 }
 
@@ -25,7 +25,7 @@ NewSchedule - creats a new schedule
 */
 func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants []string) *Schedule {
 
-	Seasons := make([]*season, nYears)
+	Seasons := make([]*Season, nYears)
 	schr := newScheduler(participants)
 	startYear := startDate.Year()
 	for y := startYear; y < startYear+nYears; y++ {
@@ -45,11 +45,11 @@ func (sch Schedule) String() string {
 	var writer = tabwriter.NewWriter(&b, 0, 8, 0, '\t', tabwriter.AlignRight)
 
 	for _, s := range sch.Seasons {
-		fmt.Fprintln(writer, "open: ", s.openWeek.Format(layoutISO), "\tclose: ", s.closeWeek.Format(layoutISO), "\t", sch.WeeksPerSeason, "wk")
+		fmt.Fprintln(writer, "open: ", s.OpenWeek.Format(layoutISO), "\tclose: ", s.CloseWeek.Format(layoutISO), "\t", sch.WeeksPerSeason, "wk")
 		fmt.Fprintln(writer)
-		for _, b := range s.blocks {
-			for _, w := range b.GetWeeks() {
-				fmt.Fprintln(writer, w.startDate.Format(layoutISO), "\t", b.GetBlockType(), "\t", w.participant)
+		for _, b := range s.Blocks {
+			for _, w := range b.Weeks {
+				fmt.Fprintln(writer, w.StartDate.Format(layoutISO), "\t", b.BlockType, "\t", w.Participant)
 			}
 		}
 		fmt.Fprintln(writer)

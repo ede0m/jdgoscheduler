@@ -5,8 +5,8 @@ import "time"
 /*
 Week represents 7 days in the schedule
 */
-type week struct {
-	startDate   time.Time
-	participant string
+type Week struct {
+	StartDate   time.Time
+	Participant string
 	pointValue  float32
 }
