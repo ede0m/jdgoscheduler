@@ -10,9 +10,9 @@ Season for year is composed of blocks of weeks from open week to close week
 */
 type Season struct {
 	year      int
-	OpenWeek  time.Time
-	CloseWeek time.Time
-	Blocks    []Block
+	OpenWeek  time.Time `json:"openWeek"`
+	CloseWeek time.Time `json:"closeWeek"`
+	Blocks    []Block   `json:"blocks"`
 }
 
 /*

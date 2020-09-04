@@ -7,8 +7,8 @@ Block is a set of weeks within a season defined by some type
 */
 type Block struct {
 	open, close time.Time
-	BlockType   BlockType
-	Weeks       []Week
+	BlockType   BlockType `json:"blockType"`
+	Weeks       []Week    `json:"weeks"`
 }
 
 /*

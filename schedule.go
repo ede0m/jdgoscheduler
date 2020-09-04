@@ -13,10 +13,10 @@ const layoutISO = "2006-01-02"
 Schedule creates a new schedule full of seasons
 */
 type Schedule struct {
-	Years          int
-	WeeksPerSeason int
-	Participants   []string
-	Seasons        []*Season
+	Years          int       `json:"years"`
+	WeeksPerSeason int       `json:"weeksPerSeason"`
+	Participants   []string  `json:"participants"`
+	Seasons        []*Season `json:"seasons"`
 	scheduler      scheduler
 }
 
