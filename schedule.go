@@ -28,8 +28,11 @@ func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants [
 	Seasons := make([]*Season, nYears)
 	schr := newScheduler(participants)
 	startYear := startDate.Year()
+	startMonth := startDate.Month()
+	startDay := startDate.Day()
 	for y := startYear; y < startYear+nYears; y++ {
-		season, err := newSeason(startDate, weeksPerSeason, len(participants))
+		snStartDate := time.Date(y, startMonth, startDay, 0, 0, 0, 0, time.UTC)
+		season, err := newSeason(snStartDate, weeksPerSeason, len(participants))
 		if err != nil {
 			fmt.Println(err)
 		}
