@@ -23,7 +23,7 @@ type Schedule struct {
 /*
 NewSchedule - creats a new schedule
 */
-func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants []string) *Schedule {
+func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants []string) (*Schedule, error) {
 
 	Seasons := make([]*Season, nYears)
 	schr := newScheduler(participants)
@@ -35,12 +35,13 @@ func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants [
 		season, err := newSeason(snStartDate, weeksPerSeason, len(participants))
 		if err != nil {
 			fmt.Println(err)
+			return nil, err
 		}
 		schr.assignSeason(season)
 		Seasons[y-startYear] = season
 	}
 
-	return &Schedule{nYears, weeksPerSeason, participants, Seasons, *schr}
+	return &Schedule{nYears, weeksPerSeason, participants, Seasons, *schr}, nil
 }
 
 func (sch Schedule) String() string {
