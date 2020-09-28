@@ -1,6 +1,10 @@
 package jdscheduler
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 /*
 Block is a set of weeks within a season defined by some type
@@ -77,7 +81,7 @@ func segmentBlockWeeks(blkStartDt, blkEndDt time.Time) []Week {
 	for d := blkStartDt; d.Before(blkEndDt) || d.Equal(blkEndDt); d = d.AddDate(0, 0, 7) {
 		// if we surpass end date, we fall back to whole number of weeks in block
 		if !d.AddDate(0, 0, 7).After(blkEndDt) {
-			weeks = append(weeks, Week{d, "", 0})
+			weeks = append(weeks, Week{uuid.New(), d, "", 0})
 		}
 	}
 	return weeks
