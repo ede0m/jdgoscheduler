@@ -14,7 +14,7 @@ Schedule creates a new schedule full of seasons
 */
 type Schedule struct {
 	Years          int       `json:"years"`
-	WeeksPerSeason int       `json:"weeksPerSeason"`
+	UnitsPerSeason int       `json:"unitsPerSeason"`
 	Participants   []string  `json:"participants"`
 	Seasons        []*Season `json:"seasons"`
 	scheduler      scheduler
@@ -23,16 +23,16 @@ type Schedule struct {
 /*
 NewSchedule - creats a new schedule
 */
-func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants []string) (*Schedule, error) {
+func NewSchedule(start time.Time, nYears, unitsPerSeason int, participants []string) (*Schedule, error) {
 
 	Seasons := make([]*Season, nYears)
 	schr := newScheduler(participants)
-	startYear := startDate.Year()
-	startMonth := startDate.Month()
-	startDay := startDate.Day()
+	startYear := start.Year()
+	startMonth := start.Month()
+	startDay := start.Day()
 	for y := startYear; y < startYear+nYears; y++ {
 		snStartDate := time.Date(y, startMonth, startDay, 0, 0, 0, 0, time.UTC)
-		season, err := newSeason(snStartDate, weeksPerSeason, len(participants))
+		season, err := newSeason(snStartDate, unitsPerSeason, len(participants))
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -41,7 +41,7 @@ func NewSchedule(startDate time.Time, nYears, weeksPerSeason int, participants [
 		Seasons[y-startYear] = season
 	}
 
-	return &Schedule{nYears, weeksPerSeason, participants, Seasons, *schr}, nil
+	return &Schedule{nYears, unitsPerSeason, participants, Seasons, *schr}, nil
 }
 
 func (sch Schedule) String() string {
@@ -49,11 +49,11 @@ func (sch Schedule) String() string {
 	var writer = tabwriter.NewWriter(&b, 0, 8, 0, '\t', tabwriter.AlignRight)
 
 	for _, s := range sch.Seasons {
-		fmt.Fprintln(writer, "open: ", s.OpenWeek.Format(layoutISO), "\tclose: ", s.CloseWeek.Format(layoutISO), "\t", sch.WeeksPerSeason, "wk")
+		fmt.Fprintln(writer, "open: ", s.OpenWeek.Format(layoutISO), "\tclose: ", s.CloseWeek.Format(layoutISO), "\t", sch.UnitsPerSeason, "wk")
 		fmt.Fprintln(writer)
 		for _, b := range s.Blocks {
-			for _, w := range b.Weeks {
-				fmt.Fprintln(writer, w.StartDate.Format(layoutISO), "\t", b.BlockType, "\t", w.Participant)
+			for _, u := range b.Units {
+				fmt.Fprintln(writer, u.Start.Format(layoutISO), "\t", b.BlockType, "\t", u.Participant)
 			}
 		}
 		fmt.Fprintln(writer)

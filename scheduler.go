@@ -72,31 +72,31 @@ Assigns a block's weeks with a scheduler's state order.
 func (sch *scheduler) assignBlockWeeks(blk *Block) {
 
 	blkType := blk.BlockType
-	weeks := blk.Weeks
+	units := blk.Units
 	pickIndex := sch.pickIndex[blkType]
 	pickOrder := sch.pickOrder[blkType]
 
-	nWpP := float32(len(weeks)) / float32(sch.nParticipants)
+	nWpP := float32(len(units)) / float32(sch.nParticipants)
 	// everyone can fit and more.
 	if nWpP > 1 {
 
 		// a participant gets 1 double week a block at most
-		nDoubleWeeks := sch.nParticipants
+		nDoubleUnits := sch.nParticipants
 		if nWpP < 2 {
-			nDoubleWeeks = len(weeks) % sch.nParticipants
+			nDoubleUnits = len(units) % sch.nParticipants
 		}
 
 		remaining := make([]string, sch.nParticipants)
 		copy(remaining, rotatePickOrder(pickOrder.double, pickIndex.double))
 
 		// assign all double weeks
-		currWeek := 0
-		for i := 0; i < nDoubleWeeks; i++ {
+		currUnit := 0
+		for i := 0; i < nDoubleUnits; i++ {
 			participant := pickOrder.double[pickIndex.double]
-			weeks[currWeek].Participant = participant
-			weeks[currWeek+1].Participant = participant
+			units[currUnit].Participant = participant
+			units[currUnit+1].Participant = participant
 			sch.fairMap[participant] += 2
-			currWeek = (i + 1) * 2
+			currUnit = (i + 1) * 2
 			remaining = remove(remaining, participant)
 			pickIndex.double++
 			if pickIndex.double == sch.nParticipants {
@@ -106,21 +106,21 @@ func (sch *scheduler) assignBlockWeeks(blk *Block) {
 		}
 
 		// some participants still need weeks in this block, use remaining
-		if nDoubleWeeks < sch.nParticipants {
-			for currWeek < len(weeks) && len(remaining) > 0 {
+		if nDoubleUnits < sch.nParticipants {
+			for currUnit < len(units) && len(remaining) > 0 {
 				participant := pop(remaining)
-				weeks[currWeek].Participant = participant
+				units[currUnit].Participant = participant
 				sch.fairMap[participant]++
-				currWeek++
+				currUnit++
 			}
 		} else {
 			// just use single pick index
-			for currWeek < len(weeks) {
+			for currUnit < len(units) {
 				participant := pickOrder.single[pickIndex.single]
-				weeks[currWeek].Participant = participant
+				units[currUnit].Participant = participant
 				sch.fairMap[participant]++
 				pickIndex.single++
-				currWeek++
+				currUnit++
 				if pickIndex.single == sch.nParticipants {
 					pickOrder.single = rotatePickOrder(pickOrder.single, 1)
 					pickIndex.single = 0
@@ -130,9 +130,9 @@ func (sch *scheduler) assignBlockWeeks(blk *Block) {
 
 	} else {
 		// participant gets less than or exactly 1 week. rotate across years and only assign single weeks
-		for i := range weeks {
+		for i := range units {
 			participant := pickOrder.single[pickIndex.single]
-			weeks[i].Participant = participant
+			units[i].Participant = participant
 			sch.fairMap[participant]++
 			pickIndex.single++
 			// rotate and reset index when we have made a full rotation

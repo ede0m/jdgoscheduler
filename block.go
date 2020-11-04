@@ -12,7 +12,7 @@ Block is a set of weeks within a season defined by some type
 type Block struct {
 	open, close time.Time
 	BlockType   BlockType `json:"blockType"`
-	Weeks       []Week    `json:"weeks"`
+	Units       []Unit    `json:"units"`
 }
 
 /*
@@ -76,13 +76,13 @@ GetWeeks gets the weeks of a block
 	Creates Weeks within Block. Block can only have a whole number of weeks.
 	It will fall back (floor) the number of weeks is float
 */
-func segmentBlockWeeks(blkStartDt, blkEndDt time.Time) []Week {
-	var weeks []Week
+func segmentBlockWeeks(blkStartDt, blkEndDt time.Time) []Unit {
+	var units []Unit
 	for d := blkStartDt; d.Before(blkEndDt) || d.Equal(blkEndDt); d = d.AddDate(0, 0, 7) {
 		// if we surpass end date, we fall back to whole number of weeks in block
 		if !d.AddDate(0, 0, 7).After(blkEndDt) {
-			weeks = append(weeks, Week{uuid.New(), d, "", 0})
+			units = append(units, Unit{uuid.New(), d, "", 0})
 		}
 	}
-	return weeks
+	return units
 }
